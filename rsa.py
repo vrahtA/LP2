@@ -1,40 +1,43 @@
-import random
-def gcd(a, b):
-    while b != 0:
-        a, b = b, a % b
-    return a
+# Simple RSA for text
 
-def generate_keys(p, q):
-    n = p * q
-    phi = (p - 1) * (q - 1)
-    
-    e = random.randrange(2, phi)
-    while gcd(e, phi) != 1:
-        e = random.randrange(2, phi)
-    
-    d = pow(e, -1, phi)
-    return ((e, n), (d, n))
+# Step 1: Choose two primes
+p = 3
+q = 11
 
-def encrypt(msg, public):
-    enc = []
-    e, n = public
-    for c in msg:
-        enc.append(pow(ord(c), e, n))
-    return enc
+# Step 2: Compute n and phi
+n = p * q             # n = 33
+phi = (p - 1) * (q - 1)  # phi = 20
 
-def decrypt(enc, private):
-    dec = []
-    d, n = private
-    for c in enc:
-        dec.append(chr(pow(c, d, n)))
-    return ''.join(dec)
+# Step 3: Choose public exponent e
+e = 7  # Small prime that is coprime to phi
 
-p, q = 43, 53 
-public_key, private_key = generate_keys(p, q)
-message = input()
-print("Public key", public_key)
-print("Private key", private_key)
-encrypted_message = encrypt(message, public_key)
-decrypted_message = decrypt(encrypted_message, private_key)
+# Step 4: Compute private key d (modular inverse of e mod phi)
+def modinv(e, phi):
+    for d in range(1, phi):
+        if (d * e) % phi == 1:
+            return d
+    return None
 
-print("Encrypted Message: ",encrypted_message,"     Decrypted Message:",decrypted_message)
+d = modinv(e, phi)
+
+# Step 5: Encryption (convert each char to int and encrypt)
+def encrypt_text(message):
+    return [(ord(char) ** e) % n for char in message]
+
+# Step 6: Decryption (decrypt each int and convert back to char)
+def decrypt_text(cipher):
+    return ''.join([chr((char ** d) % n) for char in cipher])
+
+# Example usage
+text = "HELLOWORLD"
+ciphertext = encrypt_text(text)
+decrypted = decrypt_text(ciphertext)
+
+# Output
+print("Public key: ", (e, n))
+print("Private key:", (d, n))
+print("Original text:", text)
+print("Encrypted:", ciphertext)
+print("Decrypted:", decrypted)
+
+
